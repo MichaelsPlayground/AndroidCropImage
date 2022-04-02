@@ -33,13 +33,17 @@ import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 // https://www.youtube.com/watch?v=nA4XWsG9IPM
+// https://github.com/foxandroid/ScopedStorageJavaYT
+
+    // speichern eines kamerabildes, laden eines Bildes aus der Gallery und Cropping eines Bildes aus der Gallery funktionieren
+
 /*
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28"/>
  */
 
-    Button takeImage;
+    Button takeImage, loadImage, cropImage;
 
     private boolean isReadPermissionGranted = false;
     private boolean isWritePermissionGranted = false;
@@ -48,12 +52,18 @@ public class MainActivity extends AppCompatActivity {
     Uri imageUri;
     private static final int CAMERA = 100;
 
+    Intent loadImageIntent, cropImageIntent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         takeImage = findViewById(R.id.button);
+        loadImage = findViewById(R.id.buttonLoad);
+        loadImageIntent = new Intent(MainActivity.this, ReadExternalStorage.class);
+        cropImage = findViewById(R.id.buttonCrop);
+        cropImageIntent = new Intent(MainActivity.this, CropActivity.class);
 
         mPermissionResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), new ActivityResultCallback<Map<String, Boolean>>() {
             @Override
@@ -91,6 +101,20 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mGetImage.launch(new Intent(MediaStore.ACTION_IMAGE_CAPTURE));
+            }
+        });
+
+        loadImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(loadImageIntent);
+            }
+        });
+
+        cropImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(cropImageIntent);
             }
         });
     }
