@@ -19,14 +19,18 @@ package de.androidcrypto.androidsaveimageexternalstoragescopedstorage;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -44,8 +48,10 @@ import com.naver.android.helloyako.imagecrop.view.ImageCropView;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Objects;
 
 public class CropActivity extends AppCompatActivity {
     public static final String TAG = "CropActivity";
@@ -154,7 +160,44 @@ public class CropActivity extends AppCompatActivity {
         }
     }
 
-    public File bitmapConvertToFile(Bitmap bitmap) {
+    private boolean saveImageToExternalStorage(String imgName, Bitmap bmp) {
+        // https://www.youtube.com/watch?v=nA4XWsG9IPM
+        Uri imageCollection = null;
+        ContentResolver resolver = getContentResolver();
+        // > SDK 28
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            imageCollection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        } else {
+            imageCollection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        }
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, imgName + ".jpg");
+        contentValues.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+        Uri imageUri = resolver.insert(imageCollection, contentValues);
+        try {
+            OutputStream outputStream = resolver.openOutputStream(Objects.requireNonNull(imageUri));
+            bmp.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            Objects.requireNonNull(outputStream);
+            return true;
+        } catch (Exception e) {
+            Toast.makeText(this, "Image not saved: \n" + e, Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    //public File bitmapConvertToFile(Bitmap bitmap) {
+    public void bitmapConvertToFile(Bitmap bitmap) {
+        String filename = "IMG_" + (new SimpleDateFormat("yyyyMMddHHmmss")).format(Calendar.getInstance().getTime());
+        boolean saveResult;
+        saveResult = saveImageToExternalStorage(filename, bitmap);
+        if (saveResult == false) {
+            System.out.println("*** ERROR image saving not successfull");
+            //return null;
+            return;
+        }
+        Toast.makeText(CropActivity.this, "file saved", Toast.LENGTH_LONG).show();
+        /*
         FileOutputStream fileOutputStream = null;
         File bitmapFile = null;
         try {
@@ -187,9 +230,21 @@ public class CropActivity extends AppCompatActivity {
                 } catch (Exception e) {
                 }
             }
-        }
+        }*/
+        /*
+        MediaScannerConnection.scanFile(this, new String[]{bitmapFile.getAbsolutePath()}, null, new MediaScannerConnection.MediaScannerConnectionClient() {
+            @Override
+            public void onMediaScannerConnected() {
 
-        return bitmapFile;
+            }
+
+            @Override
+            public void onScanCompleted(String path, Uri uri) {
+                runOnUiThread(() -> Toast.makeText(CropActivity.this, "file saved", Toast.LENGTH_LONG).show());
+            }
+        });*/
+        //return bitmapFile;
+        return;
     }
 
     public void onClickSaveButton(View v) {
