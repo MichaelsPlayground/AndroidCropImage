@@ -224,7 +224,10 @@ public class CropActivity extends AppCompatActivity {
                         BitmapDrawable drawable = (BitmapDrawable) imageView.getDrawable();
                         Bitmap bitmap = drawable.getBitmap();
                         imageCropView.setImageBitmap(bitmap);
-                        //imageCropView.setImageURI(result);
+                        // clearing
+                        drawable = null;
+                        bitmap = null;
+                        //imageCropView.setImageURI(result); // does not work
                     }
                 }
         );
